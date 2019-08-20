@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/owner/jsonDecoder/decoder"
+	"github.com/go-lang/jsonDecoder/decoder"
 )
 
 func main() {
