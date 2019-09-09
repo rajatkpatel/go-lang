@@ -31,4 +31,5 @@ func main() {
 
 func init() {
 	log.SetPrefix("LOG: ")
+	log.SetFlags(log.LstdFlags | log.Lshortfile)
 }

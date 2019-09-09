@@ -32,12 +32,11 @@ func GetEmployees(w http.ResponseWriter, r *http.Request) {
 	defer s.Close()
 	employees, err := getEmployees(session)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(employees)
-
 }
 
 //CreateEmployees create a employee.
@@ -49,11 +48,10 @@ func CreateEmployees(w http.ResponseWriter, r *http.Request) {
 	json.NewDecoder(r.Body).Decode(&employee)
 	employee, err := createEmployees(session, employee)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	json.NewEncoder(w).Encode(employee)
-
 }
 
 //GetEmployee displays the employee details of the queried employee id.
@@ -64,8 +62,12 @@ func GetEmployee(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	id := params["id"]
 	employee, err := getEmployee(session, id)
-	if err != nil {
+	if err != nil && err == mgo.ErrNotFound {
 		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	json.NewEncoder(w).Encode(employee)
@@ -81,8 +83,12 @@ func ReplaceEmployee(w http.ResponseWriter, r *http.Request) {
 	var employee Employee
 	json.NewDecoder(r.Body).Decode(&employee)
 	employee, err := replaceEmployee(session, id, employee)
-	if err != nil {
+	if err != nil && err == mgo.ErrNotFound {
 		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	json.NewEncoder(w).Encode(employee)
@@ -99,8 +105,12 @@ func UpdateEmployee(w http.ResponseWriter, r *http.Request) {
 	var employee map[string]interface{}
 	json.NewDecoder(r.Body).Decode(&employee)
 	updatedEmployee, err := updateEmployee(session, id, employee)
-	if err != nil {
+	if err != nil && err == mgo.ErrNotFound {
 		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	json.NewEncoder(w).Encode(updatedEmployee)
@@ -114,10 +124,13 @@ func DeleteEmployee(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	id := params["id"]
 	err := deleteEmployee(session, id)
-	if err != nil {
+	if err != nil && err == mgo.ErrNotFound {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 	json.NewEncoder(w).Encode(id)
-
 }
