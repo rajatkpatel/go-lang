@@ -8,15 +8,15 @@ import (
 	"gopkg.in/mgo.v2/bson"
 )
 
-//DBNAME is the database name in the mongoDB.
-const DBNAME = "employeeDB"
+//DbName is the database name in the mongoDB.
+var DbName = "employeeDB"
 
-//COLLECTIONNAME is the collection name in the databse DBNAME.
-const COLLECTIONNAME = "employees"
+//CollectionName is the collection name in the databse DbName.
+var CollectionName = "employees"
 
 func getEmployees(session *mgo.Session) ([]Employee, error) {
 	var employees []Employee
-	db := session.DB(DBNAME).C(COLLECTIONNAME)
+	db := session.DB(DbName).C(CollectionName)
 	err := db.Find(bson.M{}).All(&employees)
 	if err != nil {
 		log.Println("Failed to fetch employees: ", err)
@@ -26,7 +26,7 @@ func getEmployees(session *mgo.Session) ([]Employee, error) {
 }
 
 func createEmployees(session *mgo.Session, employee Employee) (Employee, error) {
-	db := session.DB(DBNAME).C(COLLECTIONNAME)
+	db := session.DB(DbName).C(CollectionName)
 	err := db.Insert(employee)
 	if err != nil {
 		log.Println("Failed to add employee: ", err)
@@ -37,7 +37,7 @@ func createEmployees(session *mgo.Session, employee Employee) (Employee, error) 
 
 func getEmployee(session *mgo.Session, id string) (Employee, error) {
 	var employee Employee
-	db := session.DB(DBNAME).C(COLLECTIONNAME)
+	db := session.DB(DbName).C(CollectionName)
 	err := db.Find(bson.M{"_id": bson.ObjectIdHex(id)}).One(&employee)
 	if err != nil {
 		log.Printf("Failed to fetch employee having id %v : %v", id, err)
@@ -47,17 +47,21 @@ func getEmployee(session *mgo.Session, id string) (Employee, error) {
 }
 
 func replaceEmployee(session *mgo.Session, id string, employee Employee) (Employee, error) {
-	db := session.DB(DBNAME).C(COLLECTIONNAME)
-	err := db.Update(bson.M{"_id": bson.ObjectIdHex(id)}, &employee)
+	db := session.DB(DbName).C(CollectionName)
+	err := db.Update(bson.M{"_id": bson.ObjectIdHex(id)}, employee)
 	if err != nil {
 		log.Printf("Failed to update employee having id %v : %v", id, err)
 		return Employee{}, err
 	}
-	return employee, err
+	replacedEmployee, err := getEmployee(session, id)
+	if err != nil {
+		return Employee{}, err
+	}
+	return replacedEmployee, err
 }
 
 func updateEmployee(session *mgo.Session, id string, employee map[string]interface{}) (Employee, error) {
-	db := session.DB(DBNAME).C(COLLECTIONNAME)
+	db := session.DB(DbName).C(CollectionName)
 	previousEmployee, err := getEmployee(session, id)
 	if err != nil {
 		return Employee{}, err
@@ -71,11 +75,15 @@ func updateEmployee(session *mgo.Session, id string, employee map[string]interfa
 		log.Printf("Failed to update employee having id %v : %v", id, err)
 		return Employee{}, err
 	}
-	return previousEmployee, err
+	updatedEmployee, err := getEmployee(session, id)
+	if err != nil {
+		return Employee{}, err
+	}
+	return updatedEmployee, err
 }
 
 func deleteEmployee(session *mgo.Session, id string) error {
-	db := session.DB(DBNAME).C(COLLECTIONNAME)
+	db := session.DB(DbName).C(CollectionName)
 	err := db.Remove(bson.M{"_id": bson.ObjectIdHex(id)})
 	if err != nil {
 		log.Printf("Failed to delete employee having id %v : %v", id, err)

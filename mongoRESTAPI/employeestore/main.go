@@ -8,15 +8,17 @@ import (
 	"github.com/go-lang/mongoRESTAPI/employeestore/employee"
 )
 
-//HOST is the host URL of mongoDB.
-const HOST = "mongodb://127.0.0.1:27017"
+//Host is the Host URL of mongoDB.
+var Host = "mongodb://127.0.0.1:27017"
 
-//PORT is the exposed port for REST API.
-const PORT = ":5000"
+//Port is the exposed Port for REST API.
+var Port = ":5000"
+
+var listenAndServe = http.ListenAndServe
 
 func main() {
 	log.Println("Connecting with Mongo DB...")
-	session, err := dbconnect.CreateSession(HOST)
+	session, err := dbconnect.CreateSession(Host)
 	if err != nil {
 		log.Println("Session not established, Exiting from Main...")
 		return
@@ -26,7 +28,7 @@ func main() {
 	defer session.Close()
 
 	router := employee.Route(session)
-	log.Fatal(http.ListenAndServe(PORT, router))
+	log.Fatal(listenAndServe(Port, router))
 }
 
 func init() {
